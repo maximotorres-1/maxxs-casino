@@ -1,5 +1,5 @@
 (() => {
-  const CHIP_VALUES = [1, 5, 10, 25, 100, 500, 1000];
+  const CHIP_VALUES = [1, 5, 10, 25, 100, 500, 1000, 5000, "max"];
   const DEFAULTS = {
     bankroll: 10000,
     numDecks: 6,
@@ -633,6 +633,7 @@
 
     updateBet(value) {
       this.betTotal.textContent = value.toString();
+      this.betTotal.classList.toggle("large", value >= 10000);
     }
 
     clearHands() {
@@ -861,9 +862,23 @@
       chipRack.innerHTML = "";
       CHIP_VALUES.forEach((value) => {
         const chip = document.createElement("div");
-        chip.className = `chip chip-${value}`;
-        chip.textContent = value.toString();
-        chip.dataset.value = value.toString();
+        let label = "";
+        let classLabel = "";
+        if (value === "max") {
+          label = "MAX";
+          classLabel = "max";
+          chip.dataset.value = "max";
+        } else if (value >= 1000) {
+          label = `${value / 1000}k`;
+          classLabel = label.toLowerCase();
+          chip.dataset.value = value.toString();
+        } else {
+          label = value.toString();
+          classLabel = label.toLowerCase();
+          chip.dataset.value = value.toString();
+        }
+        chip.className = `chip chip-${classLabel}`;
+        chip.textContent = label;
         chipRack.appendChild(chip);
       });
 
@@ -975,8 +990,16 @@
         if (event.target.closest("#undoChipBtn")) return;
         if (this.draggingChip) return;
         const value = this.selectedChipValue ?? CHIP_VALUES[0];
-        if (this.currentBet + this.getSideBetTotal() + value > this.bankroll) return;
-        this.ui.animateChipToBetSpot(value).then(() => this.addChip(value));
+        if (value === "max") {
+          const maxAmount = Math.max(0, this.bankroll - this.getSideBetTotal());
+          if (maxAmount <= 0) return;
+          this.ui.animateChipToBetSpot("max").then(() => this.addChip("max"));
+          return;
+        }
+        const addAmount = value;
+        if (this.currentBet + this.getSideBetTotal() + addAmount > this.bankroll) return;
+        this.ui.animateChipToBetSpot(String(value))
+          .then(() => this.addChip(addAmount));
       });
     }
 
@@ -1035,8 +1058,11 @@
       rack.addEventListener("pointerdown", (event) => {
         const chip = event.target.closest(".chip");
         if (!chip || !this.canBet()) return;
-        const value = Number(chip.dataset.value);
-        if (this.currentBet + this.getSideBetTotal() + value > this.bankroll) return;
+        const rawValue = chip.dataset.value;
+        const value = rawValue === "max" ? "max" : Number(rawValue);
+        const addAmount = value === "max" ? Math.max(0, this.bankroll - this.getSideBetTotal()) : value;
+        if (addAmount <= 0) return;
+        if (this.currentBet + this.getSideBetTotal() + addAmount > this.bankroll) return;
         this.selectedChipValue = value;
         this.highlightSelectedChip();
         dragEl = chip.cloneNode(true);
@@ -1079,7 +1105,7 @@
                 e.clientY <= rect.bottom
               ) {
                 const name = circle.dataset.sidebet;
-                if (name) this.addSideBetChip(name, value);
+                if (name && value !== "max") this.addSideBetChip(name, value);
               }
             });
           }
@@ -1106,7 +1132,8 @@
         const chip = event.target.closest(".chip");
         if (!chip || !this.canBet()) return;
         if (this.draggingChip) return;
-        const value = Number(chip.dataset.value);
+        const rawValue = chip.dataset.value;
+        const value = rawValue === "max" ? "max" : Number(rawValue);
         this.selectedChipValue = value;
         this.highlightSelectedChip();
       });
@@ -1115,9 +1142,14 @@
     highlightSelectedChip() {
       const rack = document.getElementById("chip-rack");
       rack.querySelectorAll(".chip").forEach((chip) => {
-        const value = Number(chip.dataset.value);
+        const rawValue = chip.dataset.value;
+        const value = rawValue === "max" ? "max" : Number(rawValue);
         chip.classList.toggle("selected", value === this.selectedChipValue);
       });
+    }
+
+    getMaxAddAmount() {
+      return Math.max(0, this.bankroll - this.currentBet - this.getSideBetTotal());
     }
 
     canBet() {
@@ -1126,6 +1158,15 @@
 
     addChip(value) {
       if (!this.canBet()) return;
+      if (value === "max") {
+        const maxAmount = Math.max(0, this.bankroll - this.getSideBetTotal());
+        if (maxAmount <= 0) return;
+        this.currentBet = maxAmount;
+        this.betChips = ["max"];
+        this.renderBetStack();
+        this.render();
+        return;
+      }
       if (this.currentBet + this.getSideBetTotal() + value > this.bankroll) return;
       this.currentBet += value;
       this.betChips.push(value);
@@ -1136,7 +1177,11 @@
     removeLastChip() {
       if (!this.canBet() || this.betChips.length === 0) return;
       const value = this.betChips.pop();
-      this.currentBet -= value;
+      if (value === "max") {
+        this.currentBet = 0;
+      } else {
+        this.currentBet -= value;
+      }
       this.renderBetStack();
       this.render();
     }
@@ -1179,6 +1224,16 @@
     rebet() {
       if (!this.canBet()) return;
       if (this.lastBetChips.length === 0) return;
+      if (this.lastBetChips.includes("max")) {
+        const maxAmount = Math.max(0, this.bankroll - this.getSideBetTotal());
+        if (maxAmount <= 0) return;
+        this.currentBet = maxAmount;
+        this.betChips = ["max"];
+        this.renderBetStack();
+        this.renderSideBets();
+        this.render();
+        return;
+      }
       const total = this.lastBetChips.reduce((sum, v) => sum + v, 0);
       const sideTotal = Object.values(this.lastSideBets).reduce((sum, arr) => sum + arr.reduce((s, v) => s + v, 0), 0);
       if (total + sideTotal === 0 || total + sideTotal > this.bankroll) return;
@@ -1205,8 +1260,16 @@
       stack.innerHTML = "";
       this.betChips.forEach((value, idx) => {
         const chip = document.createElement("div");
-        chip.className = `chip chip-${value}`;
-        chip.textContent = value.toString();
+        let label = "";
+        if (value === "max") {
+          label = "MAX";
+        } else if (value >= 1000) {
+          label = `${value / 1000}k`;
+        } else {
+          label = value.toString();
+        }
+        chip.className = `chip chip-${label.toLowerCase()}`;
+        chip.textContent = label;
         chip.style.transform = "translateY(0)";
         chip.style.zIndex = (100 + idx).toString();
         stack.appendChild(chip);

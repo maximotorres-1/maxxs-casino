@@ -352,6 +352,11 @@ body {
   margin-bottom: 6px;
 }
 
+#bet-total.large {
+  font-size: 16px;
+  letter-spacing: 0.4px;
+}
+
 .bet-actions {
   display: flex;
   gap: 10px;
@@ -369,6 +374,9 @@ body {
   transform: translateX(-50%);
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 640px;
   padding: 10px 18px;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 16px;
@@ -423,6 +431,25 @@ body {
 .chip.chip-100 { background-color: var(--chip-black); color: #fff; }
 .chip.chip-500 { background-color: var(--chip-purple); color: #fff; }
 .chip.chip-1000 { background-color: var(--chip-orange); color: #fff; }
+.chip.chip-1k { background-color: var(--chip-orange); color: #fff; }
+.chip.chip-5k { background: linear-gradient(145deg, #9b4dff, #5b1cc9); color: #fff; }
+.chip.chip-max {
+  background: linear-gradient(145deg, #ff7fd1, #d6429d);
+  color: #1a1a1a;
+  border-color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chip.chip-max::after {
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+.chip.chip-max,
+.bet-stack .chip.chip-max,
+.sidebet-stack .chip.chip-max {
+  color: #1a1a1a;
+}
 
 .bet-stack {
   position: absolute;
