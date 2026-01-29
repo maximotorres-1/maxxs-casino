@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BlackJ Casino</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="top-bar">
+        <div class="brand">Maxxs Casino</div>
+        <div class="bankroll">Bankroll: <span id="bankrollValue">10000</span></div>
+        <button id="settingsBtn" class="btn ghost">Settings</button>
+      </header>
+
+      <section id="table">
+        <div class="table-texture"></div>
+        <div class="table-arc"></div>
+        <div class="table-rule top">BLACKJACK PAYS 3 TO 2</div>
+        <div class="table-rule bottom">DEALER STANDS ON SOFT 17</div>
+        <div class="side-bet-ring">
+          <div class="side-bet-circle c1" data-sidebet="perfectPairs">
+            <span>Perfect Pairs</span>
+            <span class="info">?</span>
+            <span class="tooltip">Your first two cards are a pair (payout varies by match).</span>
+          </div>
+          <div class="side-bet-circle c2" data-sidebet="bustBonus">
+            <span>Bust Bonus</span>
+            <span class="info">?</span>
+            <span class="tooltip">Dealer busts (pays more with more dealer cards).</span>
+          </div>
+        </div>
+
+        <div class="shoe-area">
+          <div id="shoe">
+            <div class="shoe-label">Shoe</div>
+          </div>
+          <div id="discard">
+            <div class="discard-label">Discard</div>
+          </div>
+        </div>
+
+        <div id="dealer-area" class="area dealer">
+          <div class="area-title">Dealer</div>
+          <div class="hand" data-hand="dealer">
+            <div class="cards" id="dealerCards"></div>
+            <div class="total" id="dealerTotal">?</div>
+          </div>
+        </div>
+
+        <div id="betting">
+          <div id="bet-spot" class="bet-spot">
+            <div class="bet-label">Place Bet</div>
+            <div id="bet-total">0</div>
+            <button id="undoChipBtn" class="btn mini">Remove</button>
+          </div>
+          <div class="bet-actions">
+            <button id="clearBetBtn" class="btn">Clear Bet</button>
+            <button id="rebetBtn" class="btn">Rebet</button>
+          </div>
+        </div>
+
+        <div id="player-area" class="area player">
+          <div class="area-title">Player</div>
+          <div id="hands" class="hands"></div>
+        </div>
+
+        <div id="chip-rack" class="chip-rack"></div>
+
+      </section>
+
+      <div id="controls" class="controls-bar">
+        <button id="dealBtn" class="btn primary">Deal</button>
+        <button id="hitBtn" class="btn info">Hit</button>
+        <button id="standBtn" class="btn warning">Stand</button>
+        <button id="doubleBtn" class="btn accent">Double</button>
+        <button id="splitBtn" class="btn accent">Split</button>
+        <button id="surrenderBtn" class="btn danger">Surrender</button>
+        <button id="insuranceBtn" class="btn ghost">Insurance</button>
+      </div>
+
+      <div id="messageOverlay" class="overlay hidden">
+        <div class="message" id="messageText">WIN</div>
+      </div>
+
+      <div id="settingsModal" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Settings</h2>
+            <button id="closeSettingsBtn" class="btn ghost">Close</button>
+          </div>
+          <div class="modal-body">
+            <div class="setting">
+              <label>Starting Bankroll</label>
+              <input id="startBankrollInput" type="number" min="100" step="100" />
+            </div>
+            <div class="setting">
+              <label>Number of Decks</label>
+              <input id="numDecksInput" type="number" min="1" max="8" step="1" />
+            </div>
+            <div class="setting">
+              <label><input id="insuranceToggle" type="checkbox" /> Insurance (default ON)</label>
+            </div>
+            <div class="setting">
+              <label><input id="dasToggle" type="checkbox" /> Double After Split (DAS)</label>
+            </div>
+            <div class="setting">
+              <label><input id="surrenderToggle" type="checkbox" /> Late Surrender (LS)</label>
+            </div>
+            <div class="setting">
+              <label><input id="soundToggle" type="checkbox" /> Sound Effects</label>
+            </div>
+            <div class="setting">
+              <label>Sound FX Volume</label>
+              <input id="sfxVolume" type="range" min="0" max="1" step="0.01" />
+            </div>
+            <div class="setting">
+              <label><input id="musicToggle" type="checkbox" /> Ambient Music</label>
+            </div>
+            <div class="setting">
+              <label>Music Volume</label>
+              <input id="musicVolume" type="range" min="0" max="1" step="0.01" />
+            </div>
+            <div class="setting developer gate">
+              <label>
+                Developer Mode
+                <span class="dev-note">Password required</span>
+              </label>
+              <div class="dev-gate">
+                <input id="devPassword" type="password" placeholder="Password" />
+                <button id="unlockDevBtn" class="btn mini">Unlock</button>
+              </div>
+            </div>
+            <div id="devPanel" class="developer-panel hidden">
+              <div class="setting developer">
+                <label>Rig Outcome</label>
+                <select id="rigMode">
+                  <option value="normal">Normal</option>
+                  <option value="player-bj">Player Blackjack</option>
+                  <option value="player-win">Player Win</option>
+                  <option value="player-lose">Player Lose</option>
+                  <option value="dealer-bj">Dealer Blackjack</option>
+                  <option value="always-split">Always Split</option>
+                </select>
+              </div>
+              <div class="setting developer">
+                <label>Test FX</label>
+                <div class="dev-gate">
+                  <button id="testConfettiBtn" class="btn mini">Test Confetti</button>
+                  <button id="testBalloonsBtn" class="btn mini">Test Balloons</button>
+                </div>
+              </div>
+              <div class="setting developer status">
+                <span id="devStatus">Developer Mode: OFF</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button id="saveSettingsBtn" class="btn primary">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <canvas id="fxCanvas"></canvas>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
